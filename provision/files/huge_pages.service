@@ -1,0 +1,27 @@
+[Unit]
+Description=setup_hugepage_kernel_params
+Documentation=https://lwn.net/Articles/376606/
+After=sysinit.target
+Requires=sysinit.target
+AssertFileIsExecutable=/usr/bin/hugeadm
+
+[Service]
+Type=oneshot
+# Be careful it is a trap ! without this stop commands are run just after ExecStart has finished
+RemainAfterExit=yes
+
+# Be careful it is a trap ! You cannot add all options at once or some will silently be skipped
+ExecStart=/usr/bin/hugeadm \
+  --create-global-mounts \
+  "--pool-pages-max" "DEFAULT:1G" "--pool-pages-min" "DEFAULT:128M"
+ExecStart=/usr/bin/hugeadm \
+  --set-recommended-shmmax --set-recommended-min_free_kbytes
+# --set-shm-group 1001
+
+ExecStop=/usr/bin/hugeadm -v \
+  "--pool-pages-max" "DEFAULT:0" "--pool-pages-min" "DEFAULT:0"
+ExecStop=umount /var/lib/hugetlbfs/global/pagesize-2MB
+ExecStop=umount /var/lib/hugetlbfs/global/pagesize-1GB
+
+[Install]
+WantedBy=basic.target

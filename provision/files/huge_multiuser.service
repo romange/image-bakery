@@ -1,0 +1,10 @@
+[Unit]
+Description=Systemd service to fix hugepages
+After=dev-hugepages.mount
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/chmod o+w /dev/hugepages/
+
+[Install]
+WantedBy=multi-user.target
