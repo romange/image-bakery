@@ -27,9 +27,12 @@ terraform apply --var "bucket=..." --var "region=..."
 
 ## Packer build
 
-`packer build  --only=googlecompute.dev  --var-file=myvars.pkrvars.hcl  dev.pkr.hcl`
+`./build.sh --gcp --var-file=myvars.pkrvars.hcl`
 
 or
 
-`packer build  --only=amazon-ebs.dev  --var-file=myvars.pkrvars.hcl  dev.pkr.hcl`
+`./build.sh --aws  --var-file=myvars.pkrvars.hcl`
 
+or
+
+`./build.sh --azure  --var-file=myvars.pkrvars.hcl`

@@ -141,6 +141,8 @@ if false; then
   ln -s /opt/${BOOST} /opt/boost
 fi
 
-echo "************* Checkout FlameGraph ****************"
+echo "************* Checkout Helio ****************"
 cd  /home/dev/projects
-git clone --depth 1 https://github.com/brendangregg/FlameGraph
+git clone https://github.com/romange/helio
+cd helio && ./blaze.sh -release
+cd build-opt && ninja base

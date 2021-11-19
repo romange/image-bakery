@@ -10,3 +10,4 @@ crash.log
 
 .terraform*
 terraform.tfstate*
+*.pkrvars.hcl
