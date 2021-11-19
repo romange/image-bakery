@@ -44,15 +44,17 @@ echo "********* Install Basics Server Environment ********"
 
 if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
   pip3 install -U git-remote-codecommit awscli
-  npm install -g aws-cdk
 
   ARTPATH=$(aws ssm get-parameters --names artifactdir  --query "Parameters[*].{Value:Value}" --output text)
 
   echo "Running: 'aws s3 cp $ARTPATH/bin/$ARCH/s5cmd'"
-  aws s3 cp s3://$ARTPATH/bin/$ARCH/s5cmd /usr/local/bin/ && chmod a+x /usr/local/bin/*
+  aws s3 cp s3://$ARTPATH/bin/$ARCH/s5cmd* /usr/local/bin/
+  zstd -d /usr/local/bin/*.zst
+  chmod a+x /usr/local/bin/*
   s5cmd cp -n s3://$ARTPATH/bin/$ARCH/* /usr/local/bin/
+  zstd -d --rm /usr/local/bin/*.zst && chmod a+x /usr/local/bin/*
   install_ena 
-
+  
 elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
   ARTPATH=$(gcloud secrets  versions access latest --secret=artifactdir)
   gsutil cp gs://$ARTPATH/bin/$ARCH/* /usr/local/bin/

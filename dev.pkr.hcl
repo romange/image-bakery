@@ -13,8 +13,9 @@ variable "project" {
 
 variable "zone" { default = "us-east1-b" }
 variable "region" { default = "us-east1" }
-variable "aws_region" { default = "eu-central-1" }
+variable "aws_region" { default = "eu-west-1" }
 variable "userdata_file" { type = string }
+variable "az_resource_group" { type = string }
 
 locals {
   gservice_account_id = "packer@${var.project}.iam.gserviceaccount.com"
@@ -55,11 +56,18 @@ source "amazon-ebs" "dev" {
   force_deregister        = true
   force_delete_snapshot   = true
   iam_instance_profile    = "PackerBuilderRole"
-  instance_type           = "c5.xlarge"
+  instance_type           = "t3.micro"
   ami_description         = "udev-2110-${local.timestamp}"
   region                  = var.aws_region
   ssh_username            = "ubuntu"
   user_data_file          = var.userdata_file
+
+  tags = {
+      OS_Version = "Ubuntu"
+      Release = "Latest"
+      Base_AMI_Name = "{{ .SourceAMIName }}"
+      Name = "Ubuntu Development 21.10"
+  }
 }
 
 source "googlecompute" "dev" {
@@ -100,8 +108,19 @@ source "azure-arm" "dev" {
 
   location                          = var.region
   vm_size                           = "Standard_B2s"
+
+  shared_image_gallery_destination {
+    subscription = var.project
+    resource_group = var.az_resource_group
+    gallery_name = "MyGallery"
+    image_name = "ubuntu-dev"
+    image_version = "1.0.0"
+    replication_regions = [var.region]
+    storage_account_type = "Standard_LRS"
+  }
+
   managed_image_name                = "udev-2110-${local.timestamp}"
-  managed_image_resource_group_name = "storage-resource-group"
+  managed_image_resource_group_name = var.az_resource_group
   user_data_file                    = var.userdata_file
 }
 

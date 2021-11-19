@@ -23,16 +23,20 @@ for ((i=1;i <= $#;));do
   case "$arg" in
     --azure)
     build_only="azure-arm.dev"
+    cloud_type='azure'
     region='centralus'
     shift
   ;;
   --gcp)
     build_only="googlecompute.dev"
+    cloud_type='gcp'
+    additional_vars='--var az_resource_group=""'
     shift
   ;;
   --aws)
     build_only="amazon-ebs.dev"
-    additional_vars='--var project=""'
+    cloud_type='aws'
+    additional_vars='--var project="" --var az_resource_group=""'
     shift
   ;;
   -*|--*=|*=*) # bypass flags
@@ -45,7 +49,7 @@ for ((i=1;i <= $#;));do
   esac
 done
 
-if [[ $build_only == "" ]]; then
+if [[ $build_only == '' ]]; then
   echo "One of --aws|--gcp|--azure must be set"
   exit 1
 fi
@@ -53,7 +57,7 @@ fi
 userdatafile=$(mktemp -u -t userdata.yml.XXXX)
 echo "Exporting userdata to ${userdatafile}"
 echo '#cloud-config' > $userdatafile
-cue export provision/userdata.cue -t osf=ubuntu --out yaml >> $userdatafile
+cue export provision/userdata.cue -t osf=ubuntu -t cloud=${cloud_type} --out yaml >> $userdatafile
 
 packcmd=(packer build --only=$build_only --var region=$region --var userdata_file=$userdatafile
          ${additional_vars} $@ dev.pkr.hcl)
