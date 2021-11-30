@@ -1,5 +1,3 @@
-// run: 
-// cue export builder.tf.cue --out json -o builder.tf.json -t bucket=...
 // terrraform apply
 //
 terraform {
@@ -14,6 +12,11 @@ terraform {
 
 variable bucket {}
 variable region { default = "eu-central-1" }
+
+
+provider "aws" {
+  region = var.region
+}
 
 data  "aws_iam_policy_document" "packer_policy" {
     statement {
@@ -39,11 +42,6 @@ data "aws_iam_policy_document" 	"instance-assume-role-policy" {
             identifiers = ["ec2.amazonaws.com"]
         }
     }   
-}
-
-
-provider "aws" {
-  region = var.region
 }
 
 resource "aws_ssm_parameter" "packer_artifact_bucket" {

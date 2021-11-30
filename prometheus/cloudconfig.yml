@@ -1,0 +1,30 @@
+#cloud-config
+
+# You need to add "default" user so that ssh keys will be copied to ubuntu user
+# during build process. 
+users:
+  - default
+  - name: prometheus
+    no_create_home: true
+    system: true
+    shell: /bin/false
+
+runcmd:
+  - mkdir /etc/prometheus /var/lib/prometheus /run/promtmp
+  - |
+    set -e
+    cd /run/promtmp
+    VER="2.31.1"
+    BASE=https://github.com/prometheus/prometheus/releases/download/
+    NAME=prometheus-${VER}.linux-amd64
+    wget ${BASE}/v${VER}/$NAME.tar.gz
+    tar xvfz $NAME.tar.gz
+    cp $NAME/prometheus /usr/local/bin/
+    cp $NAME/promtool /usr/local/bin/
+    cp -r $NAME/consoles /etc/prometheus/
+    cp -r $NAME/console_libraries /etc/prometheus/
+    cp $NAME/prometheus.yml /etc/prometheus/
+  - chown prometheus:prometheus /var/lib/prometheus
+  - chown prometheus:prometheus /usr/local/bin/prometheus
+  - chown prometheus:prometheus /usr/local/bin/promtool
+  - chown -R prometheus:prometheus /etc/prometheus
