@@ -13,9 +13,9 @@ variable "project" {
 
 variable "zone" { default = "us-east1-b" }
 variable "region" { default = "us-east1" }
-variable "aws_region" { default = "eu-west-1" }
 variable "userdata_file" { type = string }
 variable "az_resource_group" { type = string }
+variable "arch" { default = "amd64" }
 
 locals {
   gservice_account_id = "packer@${var.project}.iam.gserviceaccount.com"
@@ -33,7 +33,7 @@ source "amazon-ebs" "dev" {
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
-      name                = "ubuntu/images/hvm-ssd/ubuntu-impish-21.10-amd64-server-*"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-impish-21.10-${var.arch}-server-*"
       root-device-type    = "ebs"
     }
     owners      = ["099720109477"]
@@ -48,7 +48,7 @@ source "amazon-ebs" "dev" {
     volume_type           = "gp2"
   }
 
-  ami_name = "udev-2110-${local.timestamp}"
+  ami_name = "udev-2110-${var.arch}-${local.timestamp}"
 
   ami_virtualization_type = "hvm"
   ena_support             = true
@@ -56,17 +56,18 @@ source "amazon-ebs" "dev" {
   force_deregister        = true
   force_delete_snapshot   = true
   iam_instance_profile    = "PackerBuilderRole"
-  instance_type           = "t3.micro"
+  instance_type           = var.arch == "amd64" ? "m5.xlarge" : "m6g.large"
   ami_description         = "udev-2110-${local.timestamp}"
-  region                  = var.aws_region
+  region                  = var.region
   ssh_username            = "ubuntu"
   user_data_file          = var.userdata_file
+  # spot does not work here because spo can not set ena_support attribute.
 
   tags = {
-      OS_Version = "Ubuntu"
-      Release = "Latest"
-      Base_AMI_Name = "{{ .SourceAMIName }}"
-      Name = "Ubuntu Development 21.10"
+    OS_Version    = "Ubuntu"
+    Release       = "Latest"
+    Base_AMI_Name = "{{ .SourceAMIName }}"
+    Name          = "Ubuntu Development 21.10"
   }
 }
 
@@ -106,16 +107,16 @@ source "azure-arm" "dev" {
     dept = "dev"
   }
 
-  location                          = var.region
-  vm_size                           = "Standard_B2s"
+  location = var.region
+  vm_size  = "Standard_B2s"
 
   shared_image_gallery_destination {
-    subscription = var.project
-    resource_group = var.az_resource_group
-    gallery_name = "MyGallery"
-    image_name = "ubuntu-dev"
-    image_version = "1.0.0"
-    replication_regions = [var.region]
+    subscription         = var.project
+    resource_group       = var.az_resource_group
+    gallery_name         = "MyGallery"
+    image_name           = "ubuntu-dev"
+    image_version        = "1.0.0"
+    replication_regions  = [var.region]
     storage_account_type = "Standard_LRS"
   }
 
@@ -135,7 +136,7 @@ source "azure-arm" "dev" {
 
 locals {
   cloud_env = {
-    "amazon-ebs"    = ["AWS_DEFAULT_REGION=${var.aws_region}"]
+    "amazon-ebs"    = ["AWS_DEFAULT_REGION=${var.region}"]
     "googlecompute" = []
     "azure-arm"     = []
   }
@@ -166,14 +167,14 @@ build {
   }
 
   provisioner "shell" {
-    only             = ["sources.googlecompute.dev", "sources.amazon-ebs.dev", ]
+    only             = ["googlecompute.dev", "amazon-ebs.dev", ]
     environment_vars = concat(["DEBIAN_FRONTEND=noninteractive"], local.cloud_env[source.type])
     execute_command  = "sudo env {{ .Vars }} {{ .Path }}"
     script           = "${path.root}/provision/base.sh"
   }
 
   provisioner "shell" {
-    only            = ["sources.azure-arm.dev"]
+    only            = ["azure-arm.dev"]
     execute_command = "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'"
     inline = [
       "/usr/sbin/waagent -force -deprovision+user && export HISTSIZE=0 && sync"

@@ -17,7 +17,9 @@ runcmd:
     VER="2.31.1"
     BASE=https://github.com/prometheus/prometheus/releases/download/
     NAME=prometheus-${VER}.linux-amd64
-    wget ${BASE}/v${VER}/$NAME.tar.gz
+
+    wget -q ${BASE}/v${VER}/$NAME.tar.gz
+
     tar xvfz $NAME.tar.gz
     cp $NAME/prometheus /usr/local/bin/
     cp $NAME/promtool /usr/local/bin/

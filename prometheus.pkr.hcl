@@ -2,14 +2,14 @@ variable "region" { default = "us-east1" }
 variable "zone" { default = "us-east1-b" }
 
 variable "project" {
-  type = string
+  default = ""
 }
 
 source "amazon-ebs" "dev" {
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
-      name                = "u21*"
+      name                = "udev-2110*"
       root-device-type    = "ebs"
     }
     owners      = ["self"]

@@ -36,6 +36,7 @@ for ((i=1;i <= $#;));do
   --aws)
     build_only="amazon-ebs.dev"
     cloud_type='aws'
+    region='eu-central-1'
     additional_vars='--var project="" --var az_resource_group=""'
     shift
   ;;

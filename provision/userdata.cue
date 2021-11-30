@@ -38,6 +38,16 @@ runcmd: [
 	"modprobe -rv ip_tables",
 	"apparmor_parser -r /etc/apparmor.d/*snap-confine*",
 	"apparmor_parser -r /var/lib/snapd/apparmor/profiles/snap-confine*",
+	"""
+	BASE=https://github.com/prometheus/memcached_exporter/releases/download
+	VER=0.9.9
+	NAME=memcached_exporter-${VER}.linux-amd64
+	
+	mkdir /run/me && cd /run/me
+	wget -q ${BASE}/v${VER}/${NAME}.tar.gz
+	tar xvfz ${NAME}.tar.gz
+	mv ${NAME}/memcached_exporter /usr/local/bin/
+	"""
 ]
 
 // _os_version is limited to either al2 or ubuntu. 

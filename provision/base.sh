@@ -47,14 +47,15 @@ if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
 
   ARTPATH=$(aws ssm get-parameters --names artifactdir  --query "Parameters[*].{Value:Value}" --output text)
 
-  echo "Running: 'aws s3 cp $ARTPATH/bin/$ARCH/s5cmd'"
-  aws s3 cp s3://$ARTPATH/bin/$ARCH/s5cmd* /usr/local/bin/
-  zstd -d /usr/local/bin/*.zst
+  echo "Running: 'aws s3 cp s3://$ARTPATH/bin/$ARCH/s5cmd'"
+  aws s3 cp --recursive --exclude="*"  --include "s5cmd*" s3://$ARTPATH/bin/$ARCH/ /usr/local/bin/
+  zstd -d /usr/local/bin/*.zst || true
   chmod a+x /usr/local/bin/*
   s5cmd cp -n s3://$ARTPATH/bin/$ARCH/* /usr/local/bin/
-  zstd -d --rm /usr/local/bin/*.zst && chmod a+x /usr/local/bin/*
+  (zstd -d --rm /usr/local/bin/*.zst || true) && chmod a+x /usr/local/bin/*
   install_ena 
   
+  mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
 elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
   ARTPATH=$(gcloud secrets  versions access latest --secret=artifactdir)
   gsutil cp gs://$ARTPATH/bin/$ARCH/* /usr/local/bin/
@@ -70,7 +71,6 @@ chmod a+x /usr/local/bin/*
 
 # Dispatch files that were put by packer.yaml into /tmp/files
 mv $TF/huge_pages.service /etc/systemd/system/
-mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
 mv $TF/huge_multiuser.service /etc/systemd/system/
 mv $TF/local.conf /etc/sysctl.d/
 

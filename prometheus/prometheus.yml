@@ -24,9 +24,8 @@ scrape_configs:
 
     # metrics_path defaults to '/metrics'
     # scheme defaults to 'http'.
-
     static_configs:
       - targets: ["localhost:9090"]
   - job_name: "redis"
     static_configs:
-      - targets: [":8080"]
+      - targets: ["TODO:8080"]
