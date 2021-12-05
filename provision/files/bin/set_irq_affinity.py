@@ -4,6 +4,16 @@ import argparse
 import os
 import sys
 import re
+from typing import Optional
+
+RPS_SOCK_FLOW_ENTRIES = "/proc/sys/net/core/rps_sock_flow_entries"
+
+
+def iface_queues(iface, qtype="rx"):
+    qs = os.listdir(
+        "/sys/class/net/{iface}/queues".format(iface=iface)
+    )
+    return [q for q in qs if q.startswith(qtype)]
 
 
 def parse_proc_interrupts(filt: str):
@@ -53,27 +63,26 @@ def parse_online_cpus():
     return online_cpus
 
 
-def main():
-    # Check processor architecture
-    parser = argparse.ArgumentParser(description='irq assigner')
-    parser.add_argument(
-        '-i', type=str, help='network device name (aka ens5 or eth0)', dest='dev', required=True)
-    parser.add_argument('-n', action='store_true',
-                        dest='dry_run', help='dry-run')
-    parser.add_argument('-c', type=int, dest='cpuid', help='cpu id to assign')
-    parser.add_argument('--all', action='store_true',
-                        help='assign all cpu ids')
-    parser.add_argument('--start-cpu', type=int,
-                        dest='start_id', help='start cpu id')
-    args = parser.parse_args()
-    if not args.dry_run and os.geteuid() > 0:
-        print('Please run as root')
-        sys.exit(1)
+def configure_rfs(iface: str, dry_run: bool, rps_sock_flow_entries=32768):
+    print(
+        f'Setting {RPS_SOCK_FLOW_ENTRIES} with value {rps_sock_flow_entries}')
 
-    if args.all and args.cpuid:
-        print('can not set both --all and -c')
-        sys.exit(1)
+    if not dry_run:
+        with open(RPS_SOCK_FLOW_ENTRIES, "wb") as fd:
+            fd.write("{}\n".format(rps_sock_flow_entries))
 
+    rps_flow_cnt = rps_sock_flow_entries // os.cpu_count()
+
+    qs = iface_queues(iface, 'rx')
+    for q in qs:
+        path = f'/sys/class/net/{iface}/queues/{q}/rps_flow_cnt'
+        print("Configuring {} with value {}".format(path, rps_flow_cnt))
+        if not dry_run:
+            with open(path, "wb") as fd:
+                fd.write(f'{rps_flow_cnt}\n')
+
+
+def set_affinity(args):
     inters = parse_proc_interrupts(args.dev)
     assert inters
 
@@ -106,6 +115,7 @@ def main():
                 ii = 0
             else:
                 break
+
     # print(aff_list)
     for k, v in aff_list.items():
         irq_path = f'/proc/irq/{k}/smp_affinity_list'
@@ -114,6 +124,35 @@ def main():
         if not args.dry_run:
             with open(irq_path, 'w') as f:
                 f.write(','.join(str_ids))
+
+
+def main():
+    # Check processor architecture
+    parser = argparse.ArgumentParser(description='irq assigner')
+    parser.add_argument(
+        '-i', type=str, help='network device name (aka ens5 or eth0)', dest='dev', required=True)
+    parser.add_argument('-n', action='store_true',
+                        dest='dry_run', help='dry-run')
+    parser.add_argument('-c', type=int, dest='cpuid', help='cpu id to assign')
+    parser.add_argument('--all', action='store_true',
+                        help='assign all cpu ids')
+    parser.add_argument('--start-cpu', type=int,
+                        dest='start_id', help='start cpu id')
+    parser.add_argument('--rfs', action='store_true', help='set rfs')
+
+    args = parser.parse_args()
+    if not args.dry_run and os.geteuid() > 0:
+        print('Please run as root')
+        sys.exit(1)
+
+    if args.all and args.cpuid:
+        print('can not set both --all and -c')
+        sys.exit(1)
+
+    if args.rfs:
+        configure_rfs(args.dev, args.dry_run)
+    else:
+        set_affinity(args)
 
 
 if __name__ == "__main__":
