@@ -33,7 +33,7 @@ def parse_proc_interrupts(filt: str):
             ret[counter] = {'kind': kind, 'name': name}
 
             # this doesn't process the parts on the end
-            #for k, v in zip(fields, parts):
+            # for k, v in zip(fields, parts):
             #    ret[counter][k] = int(v)  # all of the CPUn values are ints
 
     return ret
@@ -63,6 +63,8 @@ def main():
     parser.add_argument('-c', type=int, dest='cpuid', help='cpu id to assign')
     parser.add_argument('--all', action='store_true',
                         help='assign all cpu ids')
+    parser.add_argument('--start-cpu', type=int,
+                        dest='start_id', help='start cpu id')
     args = parser.parse_args()
     if not args.dry_run and os.geteuid() > 0:
         print('Please run as root')
@@ -73,6 +75,8 @@ def main():
         sys.exit(1)
 
     inters = parse_proc_interrupts(args.dev)
+    assert inters
+
     # print(inters)
     IRQS = list(inters.keys())
     online_cpus = parse_online_cpus()
@@ -87,7 +91,7 @@ def main():
         assert args.cpuid in online_cpus
 
     ii = 0
-    ci = 0
+    ci = args.start_id if args.start_id else 0
     aff_list = {}
     while ci < len(online_cpus):
         cpuid = args.cpuid
