@@ -52,9 +52,10 @@ source "googlecompute" "dev" {
   preemptible         = true
   zone                = var.zone
 
-  image_storage_locations = [var.region]
+  image_storage_locations = [split("-", var.region)[0]]
   machine_type            = "n1-standard-1"
   image_family            = "prometheus"
+
   metadata_files = {
     user-data = "prometheus/cloudconfig.yml"
   }
@@ -67,6 +68,9 @@ source "googlecompute" "dev" {
     "https://www.googleapis.com/auth/compute",
     "https://www.googleapis.com/auth/devstorage.full_control",
   ]
+  image_labels = {
+    type = "custom"
+  }
 }
 
 

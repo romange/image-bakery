@@ -16,6 +16,7 @@ variable "region" { default = "us-east1" }
 variable "userdata_file" { type = string }
 variable "az_resource_group" { type = string }
 variable "arch" { default = "amd64" }
+variable "os_ver" { default = "21.10" }
 
 locals {
   gservice_account_id = "packer@${var.project}.iam.gserviceaccount.com"
@@ -26,6 +27,7 @@ locals {
 				done	
     EOT
   timestamp           = regex_replace(timestamp(), "[- TZ:]", "")
+  osver               = replace(var.os_ver, ".", "")
   #userdata            = templatefile("${path.root}/provision/userdata.pkrtpl.yml", { os = "ubuntu" })
 }
 
@@ -33,7 +35,7 @@ source "amazon-ebs" "dev" {
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
-      name                = "ubuntu/images/hvm-ssd/ubuntu-impish-21.10-${var.arch}-server-*"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-*-${var.os_ver}-${var.arch}-server-*"
       root-device-type    = "ebs"
     }
     owners      = ["099720109477"]
@@ -48,7 +50,7 @@ source "amazon-ebs" "dev" {
     volume_type           = "gp2"
   }
 
-  ami_name = "udev-2110-${var.arch}-${local.timestamp}"
+  ami_name = "udev-${local.osver}-${var.arch}-${local.timestamp}"
 
   ami_virtualization_type = "hvm"
   ena_support             = true
@@ -57,7 +59,7 @@ source "amazon-ebs" "dev" {
   force_delete_snapshot   = true
   iam_instance_profile    = "PackerBuilderRole"
   instance_type           = var.arch == "amd64" ? "m5.xlarge" : "m6g.large"
-  ami_description         = "udev-2110-${local.timestamp}"
+  ami_description         = "udev-${local.osver}-${local.timestamp}"
   region                  = var.region
   ssh_username            = "ubuntu"
   user_data_file          = var.userdata_file
@@ -67,25 +69,25 @@ source "amazon-ebs" "dev" {
     OS_Version    = "Ubuntu"
     Release       = "Latest"
     Base_AMI_Name = "{{ .SourceAMIName }}"
-    Name          = "Ubuntu Development 21.10"
+    Name          = "Ubuntu Development ${var.os_ver}"
   }
 }
 
 source "googlecompute" "dev" {
   project_id          = var.project
-  source_image_family = "ubuntu-2110"
+  source_image_family = format("ubuntu-%s", local.osver)
   ssh_username        = "ubuntu"
   preemptible         = true
   zone                = var.zone
 
-  image_storage_locations = [var.region]
+  image_storage_locations = [split("-", var.region)[0]]
   machine_type            = "n1-standard-1"
   image_family            = "ubuntu-dev"
   metadata_files = {
     user-data = var.userdata_file
   }
   wrap_startup_script   = false
-  image_name            = "udev-2110-${local.timestamp}"
+  image_name            = format("udev-%s-%s", local.osver, local.timestamp)
   service_account_email = local.gservice_account_id
   scopes = [
     "https://www.googleapis.com/auth/userinfo.email",
@@ -93,6 +95,10 @@ source "googlecompute" "dev" {
     "https://www.googleapis.com/auth/devstorage.full_control",
     "https://www.googleapis.com/auth/cloud-platform" # needed for secret manager
   ]
+
+  image_labels = {
+    type = "custom"
+  }
 }
 
 source "azure-arm" "dev" {

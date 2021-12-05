@@ -21,11 +21,11 @@ users: [
 
 _common_pkgs: ["acl", "automake", "autoconf", "binutils", "bison",
 	"bzip2", "ca-certificates", "ccache", "cmake-curses-gui", "chrony", "cloc", "curl",
-	"dkms", "doxygen", "htop", "iftop",
+	"dkms", "doxygen", "htop", "iftop", "iperf3",
 	"iotop", "flex", "gdb", "graphviz", "git", "golang", "libelf-dev",
 	"libtool", "make", "mlocate", "ninja-build", "npm", "parallel", "podman", "runc", "sysstat",
 	"tcptrace",
-	"python3-pip", "python3-setuptools", "vim", "unzip", "wget", "zip", "iperf3"]
+	"python3-pip", "python3-setuptools", "vim", "unzip", "wget", "zip", "zstd", ]
 
 _ubuntu_pkgs: [ "ack-grep", "cmake", "g++", "libunwind-dev", "linux-tools-generic", "libbz2-dev",
 	"docker.io", "libhugetlbfs-bin", "libncurses5-dev", "libssl-dev", "libxml2-dev",

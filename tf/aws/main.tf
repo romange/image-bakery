@@ -50,11 +50,15 @@ resource "aws_ssm_parameter" "packer_artifact_bucket" {
     value = var.bucket
 }
 
-resource "aws_iam_policy" "packer_policy" {
+data "aws_iam_policy" "packer_policy" {
+  name = "PackerAMIBuilderPolicy"
+}
+
+/*resource "aws_iam_policy" "packer_policy" {
     name =   "PackerAMIBuilderPolicy"
     path =   "/"
     policy = data.aws_iam_policy_document.packer_policy.json
-}
+}*/
 
 resource "aws_iam_role" "packer_builder_role" {
     name =  "PackerBuilderRole"
@@ -64,7 +68,7 @@ resource "aws_iam_role" "packer_builder_role" {
 
 resource "aws_iam_role_policy_attachment" "packer_attachment" {
     role = aws_iam_role.packer_builder_role.name
-    policy_arn = aws_iam_policy.packer_policy.arn
+    policy_arn = data.aws_iam_policy.packer_policy.arn
 }
 
 resource "aws_iam_instance_profile" "packer_profile" {
