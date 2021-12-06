@@ -69,7 +69,8 @@ def configure_rfs(iface: str, dry_run: bool, rps_sock_flow_entries=32768):
 
     if not dry_run:
         with open(RPS_SOCK_FLOW_ENTRIES, "wb") as fd:
-            fd.write("{}\n".format(rps_sock_flow_entries))
+            s = "{}\n".format(rps_sock_flow_entries)
+            fd.write(s.encode())
 
     rps_flow_cnt = rps_sock_flow_entries // os.cpu_count()
 
@@ -79,7 +80,8 @@ def configure_rfs(iface: str, dry_run: bool, rps_sock_flow_entries=32768):
         print("Configuring {} with value {}".format(path, rps_flow_cnt))
         if not dry_run:
             with open(path, "wb") as fd:
-                fd.write(f'{rps_flow_cnt}\n')
+                s = f'{rps_flow_cnt}\n'
+                fd.write(s.encode())
 
 
 def set_affinity(args):
