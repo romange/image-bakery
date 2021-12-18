@@ -58,7 +58,10 @@ fi
 userdatafile=$(mktemp -u -t userdata.yml.XXXX)
 echo "Exporting userdata to ${userdatafile}"
 echo '#cloud-config' > $userdatafile
-cue export provision/userdata.cue -t osf=ubuntu -t cloud=${cloud_type} --out yaml >> $userdatafile
+cuecmd=(cue export provision/cloudconfig.cue -t osf=ubuntu -t cloud=${cloud_type} \
+    --out yaml)
+echo "${cuecmd[@]}"
+"${cuecmd[@]}" >> $userdatafile
 
 packcmd=(packer build --only=$build_only --var region=$region --var userdata_file=$userdatafile
          ${additional_vars} $@ dev.pkr.hcl)

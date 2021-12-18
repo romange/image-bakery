@@ -72,7 +72,10 @@ chmod a+x /usr/local/bin/*
 # Dispatch files that were put by packer.yaml into /tmp/files
 mv $TF/huge_pages.service /etc/systemd/system/
 mv $TF/huge_multiuser.service /etc/systemd/system/
+mv $TF/node_exporter.service /etc/systemd/system/
+mv $TF/prometheus.service /etc/systemd/system/
 mv $TF/local.conf /etc/sysctl.d/
+mv $TF/prometheus.yml /etc/prometheus/
 
 systemctl enable huge_multiuser.service
 

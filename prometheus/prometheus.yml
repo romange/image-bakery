@@ -28,4 +28,9 @@ scrape_configs:
       - targets: ["localhost:9090"]
   - job_name: "redis"
     static_configs:
-      - targets: ["TODO:8080"]
+      - targets: ['TODO:8080']
+  - job_name: 'node_exporter_metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['127.0.0.1:9100']
+      
