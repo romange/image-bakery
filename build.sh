@@ -30,14 +30,18 @@ for ((i=1;i <= $#;));do
   --gcp)
     build_only="googlecompute.dev"
     cloud_type='gcp'
-    additional_vars='--var az_resource_group=""'
+    additional_vars+='--var az_resource_group="" '
     shift
   ;;
   --aws)
     build_only="amazon-ebs.dev"
     cloud_type='aws'
-    region='eu-central-1'
-    additional_vars='--var project="" --var az_resource_group=""'
+    region='us-east-1'
+    additional_vars+='--var project="" --var az_resource_group="" '
+    shift
+  ;;
+  --arm)
+    additional_vars+='--var arch=arm64 '
     shift
   ;;
   -*|--*=|*=*) # bypass flags
@@ -63,7 +67,7 @@ cuecmd=(cue export provision/cloudconfig.cue -t osf=ubuntu -t cloud=${cloud_type
 echo "${cuecmd[@]}"
 "${cuecmd[@]}" >> $userdatafile
 
-packcmd=(packer build --only=$build_only --var region=$region --var userdata_file=$userdatafile
+packcmd=(packer inspect --only=$build_only --var region=$region --var userdata_file=$userdatafile
          ${additional_vars} $@ dev.pkr.hcl)
 
 echo "${packcmd[@]}"

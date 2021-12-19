@@ -28,6 +28,7 @@ locals {
     EOT
   timestamp           = regex_replace(timestamp(), "[- TZ:]", "")
   osver               = replace(var.os_ver, ".", "")
+  ami_name = "udev-${local.osver}-${var.arch}-${local.timestamp}"
   #userdata            = templatefile("${path.root}/provision/userdata.pkrtpl.yml", { os = "ubuntu" })
 }
 
