@@ -67,7 +67,7 @@ cuecmd=(cue export provision/cloudconfig.cue -t osf=ubuntu -t cloud=${cloud_type
 echo "${cuecmd[@]}"
 "${cuecmd[@]}" >> $userdatafile
 
-packcmd=(packer inspect --only=$build_only --var region=$region --var userdata_file=$userdatafile
+packcmd=(packer build --only=$build_only --var region=$region --var userdata_file=$userdatafile
          ${additional_vars} $@ dev.pkr.hcl)
 
 echo "${packcmd[@]}"

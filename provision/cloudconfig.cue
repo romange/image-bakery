@@ -39,9 +39,11 @@ _common_pkgs: ["acl", "automake", "autoconf", "binutils", "bison",
     "tcptrace",
     "python3-pip", "python3-setuptools", "vim", "unzip", "wget", "zip", "zstd", ]
 
-_ubuntu_pkgs: [ "ack-grep", "cmake", "g++", "libunwind-dev", "linux-tools-generic", "libbz2-dev",
-    "docker.io", "libhugetlbfs-bin", "libncurses5-dev", "libssl-dev", "libxml2-dev",
-    "vim-gui-common", "net-tools", "libboost-fiber-dev", "apt-transport-https"]
+_ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "g++", 
+    "libunwind-dev", "linux-tools-generic", "libbz2-dev",
+    "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev", 
+    "libssl-dev", "libxml2-dev", "net-tools", "pixz",
+    "vim-gui-common", ]
 
 // Remove systems that add overhead to syscalls.
 runcmd: [
