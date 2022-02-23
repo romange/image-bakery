@@ -42,7 +42,7 @@ _common_pkgs: ["acl", "automake", "autoconf", "binutils", "bison",
 _ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "g++", 
     "libunwind-dev", "linux-tools-generic", "libbz2-dev",
     "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev", 
-    "libssl-dev", "libxml2-dev", "net-tools", "pixz",
+    "libssl-dev", "libxml2-dev", "net-tools", "numactl", "pixz",
     "vim-gui-common", ]
 
 // Remove systems that add overhead to syscalls.

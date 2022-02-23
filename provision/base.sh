@@ -56,6 +56,7 @@ if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
   install_ena 
   
   mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
+  mv $TF/aws_init.sh /var/lib/cloud/scripts/per-once/
 elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
   ARTPATH=$(gcloud secrets  versions access latest --secret=artifactdir)
   gsutil cp gs://$ARTPATH/bin/$ARCH/* /usr/local/bin/
@@ -99,8 +100,6 @@ for i in .gitconfig .bash_aliases .bashrc .tmux.conf supress.txt
 done
 
 mkdir -p .aws projects bin /root/.aws .tmux .config/htop
-cp $TF/aws_config .aws/config
-cp $TF/aws_config /root/.aws/config
 cp $TF/reset .tmux/
 mv $TF/.bash_profile .
 mv $TF/htoprc .config/htop/
@@ -149,5 +148,6 @@ fi
 echo "************* Checkout Helio ****************"
 cd  /home/dev/projects
 git clone https://github.com/romange/helio
+chmod a+w -R helio/
 cd helio && ./blaze.sh -release
 cd build-opt && ninja base
