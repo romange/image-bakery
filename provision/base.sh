@@ -16,7 +16,7 @@ fi
 install_ena() {
   echo "************* Install ENA ****************"
 
-  local ENA_VER=2.6.0
+  local ENA_VER=2.7.0
   local ENA_SRC="/usr/src/amzn-drivers-${ENA_VER}"
 
   cd /tmp
@@ -48,18 +48,18 @@ if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
   ARTPATH=$(aws ssm get-parameters --names artifactdir  --query "Parameters[*].{Value:Value}" --output text)
 
   echo "Running: 'aws s3 cp s3://$ARTPATH/bin/$ARCH/s5cmd'"
-  aws s3 cp --recursive --exclude="*"  --include "s5cmd*" s3://$ARTPATH/bin/$ARCH/ /usr/local/bin/
-  zstd -d /usr/local/bin/*.zst || true
+  aws s3 cp --recursive s3://$ARTPATH/bin/$ARCH/ /usr/local/bin/
+  zstd -d --rm /usr/local/bin/*.zst || true
   chmod a+x /usr/local/bin/*
-  s5cmd cp -n s3://$ARTPATH/bin/$ARCH/* /usr/local/bin/
-  (zstd -d --rm /usr/local/bin/*.zst || true) && chmod a+x /usr/local/bin/*
+  s5cmd version
   install_ena 
   
   mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
-  mv $TF/aws_init.sh /var/lib/cloud/scripts/per-once/
+  mv $TF/aws_init.sh /var/lib/cloud/scripts/per-instance/
 elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
   ARTPATH=$(gcloud secrets  versions access latest --secret=artifactdir)
   gsutil cp gs://$ARTPATH/bin/$ARCH/* /usr/local/bin/
+  chmod a+x /usr/local/bin/*
 else 
   echo "Unsupported build type ${PACKER_BUILDER_TYPE}"
   exit 1
@@ -68,8 +68,6 @@ fi
 apt install -y linux-tools-`uname -r`
 
 
-chmod a+x /usr/local/bin/*
-
 # Dispatch files that were put by packer.yaml into /tmp/files
 mv $TF/huge_pages.service /etc/systemd/system/
 mv $TF/huge_multiuser.service /etc/systemd/system/
@@ -77,7 +75,7 @@ mv $TF/node_exporter.service /etc/systemd/system/
 mv $TF/prometheus.service /etc/systemd/system/
 mv $TF/local.conf /etc/sysctl.d/
 mv $TF/prometheus.yml /etc/prometheus/
-
+mv $TF/grafana_sources.yaml /etc/grafana/provisioning/datasources/
 systemctl enable huge_multiuser.service
 
 echo "* soft nofile 65535" >> /etc/security/limits.conf
@@ -106,12 +104,11 @@ mv $TF/htoprc .config/htop/
 
 mv $TF/bin/* bin/
 
-. /etc/os-release
-
-if [[ $VERSION_ID == "2" ]]; then  # AL2 Linux
-  install_cmake 3.18.2
-  echo "alias ninja=ninja-build" >> .bash_aliases
-fi
+# . /etc/os-release
+# if [[ $VERSION_ID == "2" ]]; then  # AL2 Linux
+#   install_cmake 3.18.2
+#   echo "alias ninja=ninja-build" >> .bash_aliases
+# fi
 
 # Finally, fix permissions.
 chown -R dev:dev /home/dev

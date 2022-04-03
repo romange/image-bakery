@@ -6,6 +6,12 @@ groups: [
     "docker",
 ]
 
+apt: sources: grafana: {
+    source: "deb https://packages.grafana.com/oss/deb stable main"
+
+    // Extracted with wget -q -O - https://packages.grafana.com/gpg.key  | gpg --list-packets -
+    keyid: "8C8C34C524098CB6"
+}
 
 users: [
     "default",
@@ -31,18 +37,19 @@ users: [
 
 #service_users: ["prometheus", "node_exporter"]
 
+// podman exists starting from 21.10 and later.
 _common_pkgs: ["acl", "automake", "autoconf", "binutils", "bison",
     "bzip2", "ca-certificates", "ccache", "cmake-curses-gui", "chrony", "cloc", "curl",
     "dkms", "doxygen", "htop", "iftop", "iperf3",
     "iotop", "flex", "gdb", "graphviz", "git", "golang", "libelf-dev",
-    "libtool", "make", "mlocate", "ninja-build", "npm", "parallel", "podman", "runc", "sysstat",
+    "libtool", "make", "mlocate", "ninja-build", "npm", "parallel", "runc", "sysstat",
     "tcptrace",
     "python3-pip", "python3-setuptools", "vim", "unzip", "wget", "zip", "zstd", ]
 
-_ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "g++", 
+_ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "grafana", "g++",
     "libunwind-dev", "linux-tools-generic", "libbz2-dev",
-    "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev", 
-    "libssl-dev", "libxml2-dev", "net-tools", "numactl", "pixz",
+    "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev",
+    "libssl-dev", "libxml2-dev", "net-tools", "numactl", "pixz", "redis-tools",
     "vim-gui-common", ]
 
 // Remove systems that add overhead to syscalls.
@@ -59,8 +66,18 @@ runcmd: [
     download_prometheus() {
       local PRJ=$1
       local VER=$2
+
+      if [ "$(uname -m)" = "x86_64" ]; then
+        local arch="amd64"
+      elif [ "$(uname -m)" = "aarch64" ]; then
+        local arch="arm64"
+      else
+        echo "Unknown architecture: $(uname -m). Only x86_64 and aarch64 are supported."
+        exit 1
+      fi
+
       local BASE=https://github.com/prometheus/${PRJ}/releases/download
-      local NAME=${PRJ}-${VER}.linux-amd64
+      local NAME=${PRJ}-${VER}.linux-${arch}
 
       wget -q ${BASE}/v${VER}/${NAME}.tar.gz
       tar xvfz ${NAME}.tar.gz
@@ -74,7 +91,7 @@ runcmd: [
 
     download_prometheus node_exporter 1.3.1
     mv node_exporter/node_exporter /usr/local/bin/
-    download_prometheus prometheus 2.32.0
+    download_prometheus prometheus 2.34.0
     mv prometheus/prometheus /usr/local/bin/
     cp -r prometheus/consoles /etc/prometheus
     cp -r prometheus/console_libraries /etc/prometheus

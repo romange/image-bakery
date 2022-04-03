@@ -24,7 +24,7 @@ locals {
       while [ ! -f /var/lib/cloud/instance/boot-finished ]
 				  do echo 'Waiting for cloud-init...'
 				sleep 10
-				done	
+				done
     EOT
   timestamp           = regex_replace(timestamp(), "[- TZ:]", "")
   osver               = replace(var.os_ver, ".", "")
@@ -36,6 +36,9 @@ source "amazon-ebs" "dev" {
   source_ami_filter {
     filters = {
       virtualization-type = "hvm"
+
+      # I did not succeed to use daily images because packer fails to connect to them
+      # using its ec2 keypair.
       name                = "ubuntu/images/hvm-ssd/ubuntu-*-${var.os_ver}-${var.arch}-server-*"
       root-device-type    = "ebs"
     }
@@ -133,7 +136,7 @@ source "azure-arm" "dev" {
 }
 
 
-// I could not use data source amazon-parameterstore because validate 
+// I could not use data source amazon-parameterstore because validate
 // requires that shell environment would be set before it runs.
 /*data "amazon-parameterstore" "bucket" {
   name = "artifactdir"
