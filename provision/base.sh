@@ -40,6 +40,19 @@ install_cmake() {
   cd - && rm -rf cmake-*
 }
 
+install_mold() {
+  ARCH=`uname -m`
+  MOLD_VER=1.2.1
+  BASE_URL=https://github.com/rui314/mold/releases/download
+  curl -L -s $BASE_URL/v${MOLD_VER}/mold-$MOLD_VER-$ARCH-linux.tar.gz -o mold.tgz
+  mkdir mold && tar xvfz mold.tgz -C mold --strip-components=1  && rm mold.tgz
+  mv mold/bin/* /usr/local/bin/
+  mv mold/libexec /usr/local/
+  ls /usr/local/bin/
+  mold --version
+  rm -rf mold
+}
+
 echo "********* Install Basics Server Environment ********"
 
 if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
@@ -142,9 +155,11 @@ if false; then
   ln -s /opt/${BOOST} /opt/boost
 fi
 
+install_mold
+
 echo "************* Checkout Helio ****************"
 cd  /home/dev/projects
 git clone https://github.com/romange/helio
-chmod a+w -R helio/
-cd helio && ./blaze.sh -release
+cd helio && ./blaze.sh -release -DUSE_MOLD=ON
 cd build-opt && ninja base
+chown dev:dev -R /home/dev/projects

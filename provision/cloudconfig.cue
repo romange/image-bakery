@@ -6,6 +6,13 @@ groups: [
     "docker",
 ]
 
+// To allow packer to connect to newer images that prevent from ssh-rsa
+// to be an accepted authentication algorithm. See https://github.com/hashicorp/packer/issues/11656
+// TODO: to remove around 2023 (by that time packer will probably be released with the fix).
+bootcmd: [
+    "echo PubkeyAcceptedKeyTypes=+ssh-rsa > /etc/ssh/sshd_config.d/packer.conf"
+]
+
 apt: sources: grafana: {
     source: "deb https://packages.grafana.com/oss/deb stable main"
 
@@ -52,13 +59,14 @@ _ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "grafana", "g++",
     "libssl-dev", "libxml2-dev", "net-tools", "numactl", "pixz", "redis-tools",
     "vim-gui-common", ]
 
-// Remove systems that add overhead to syscalls.
 runcmd: [
+    // Remove systems that add overhead to syscalls.
     "systemctl stop apparmor",
     "systemctl disable apparmor",
     "modprobe -rv ip_tables",
     "apparmor_parser -r /etc/apparmor.d/*snap-confine*",
     "apparmor_parser -r /var/lib/snapd/apparmor/profiles/snap-confine*",
+    // install prometheus
     "mkdir /etc/prometheus /var/lib/prometheus",
     "sudo chown prometheus:prometheus /etc/prometheus /var/lib/prometheus",
 
