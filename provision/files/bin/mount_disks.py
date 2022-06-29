@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import argparse
 import sys
 import logging
 import re
@@ -39,8 +40,13 @@ def mount(device_list: List[Dict[str, Any]]):
         children = item.get('children', None)
         name = '/dev/' + item['name']
         if type == 'disk' and not children:
-            run(f"echo 'type=83' | sudo sfdisk {name} -N 1", shell=True, check=True)
-            children = lsblk(name)
+            # create a partition under the partionless nvme disk. 'sfdisk -T' prints types.
+            # type=83 is a linux partition.
+            # Originally it was 'sudo sfdisk {name} -N 1' but it did not work on AWS.
+            # Removing -N 1 fixed the problem.
+            # TODO: to check on gcp whether it works there.
+            run(f"echo 'type=83' | sudo sfdisk {name}", shell=True, check=True)
+            children = lsblk(name)  # reread partitions again
             assert children
 
         if children:
@@ -51,13 +57,13 @@ def mount(device_list: List[Dict[str, Any]]):
 
         assert type == 'part'
         fstype = item['fstype']
-        mountpoint = item['mountpoint']
+        mountpoint = item.get('mountpoint', None) or item.get('mountpoints', None)
         logging.info("Processing item %s", item)
         if not fstype:
             logging.info(f"Formatting disk {name}")
             run(f"mkfs -t xfs {name}", shell=True)
 
-        if not mountpoint:
+        if not mountpoint or mountpoint == [None]:
             mountpoint = get_next_vol()
             logging.info(f"Mounting disk {name} to {mountpoint}")
             run(f"mount -o noatime,discard,nofail {name} {mountpoint}", shell=True, check=True)
@@ -68,6 +74,11 @@ def main():
     logging.basicConfig(format='%(asctime)-15s %(message)s')
     logging.getLogger().setLevel(logging.INFO)
 
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument(
+        '-d', type=int, help='disk like nvme1n1', dest='disk')
+
+    args = parser.parse_args()
     mount(lsblk())
     return 0
 
