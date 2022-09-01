@@ -53,6 +53,16 @@ install_mold() {
   rm -rf mold
 }
 
+install_zellij() {
+  ARCH=`uname -m`
+  BASE_URL=https://github.com/zellij-org/zellij/releases/download
+  VER=0.31.3
+  curl -L -s $BASE_URL/v${VER}/zellij-$ARCH-unknown-linux-musl.tar.gz -o zellij.tgz
+  tar xvfz zellij.tgz && rm zellij.tgz
+  mv zellij /usr/local/bin/
+  zellij setup --generate-completion  bash > /etc/bash_completion.d/zellij
+}
+
 echo "********* Install Basics Server Environment ********"
 
 if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
@@ -98,7 +108,7 @@ echo "* soft core unlimited" >> /etc/security/limits.conf
 sed -i 's/\(^GRUB_CMDLINE_LINUX=".*\)"/\1 mitigations=off"/' /etc/default/grub
 update-grub
 
-wget -P /etc/bash_completion.d/ https://raw.githubusercontent.com/imomaliev/tmux-bash-completion/master/completions/tmux
+wget -nv -P /etc/bash_completion.d/ https://raw.githubusercontent.com/imomaliev/tmux-bash-completion/master/completions/tmux
 
 echo "********* User Setup ********"
 root_gist=https://gist.githubusercontent.com/romange/43114d544e2981cfe4a6/raw
@@ -109,7 +119,6 @@ for i in .gitconfig .bash_aliases .bashrc .tmux.conf supress.txt
  do
   wget -qN $root_gist/$i
 done
-
 mkdir -p .aws projects bin /root/.aws .tmux .config/htop
 cp $TF/reset .tmux/
 mv $TF/.bash_profile .
@@ -156,6 +165,7 @@ if false; then
 fi
 
 install_mold
+install_zellij
 
 echo "************* Checkout Helio ****************"
 cd  /home/dev/projects
