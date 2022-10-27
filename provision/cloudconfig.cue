@@ -57,7 +57,7 @@ _ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "grafana", "g++",
     "libunwind-dev", "linux-tools-generic", "libbz2-dev",
     "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev",
     "libssl-dev", "libxml2-dev", "net-tools", "numactl", "pixz", "redis-tools",
-    "vim-gui-common", "libevent-2.1-7"]
+    "vim-gui-common",]
 
 runcmd: [
     // Remove systems that add overhead to syscalls.

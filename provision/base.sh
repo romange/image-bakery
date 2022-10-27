@@ -13,10 +13,20 @@ else
   ARCH='x86'
 fi
 
+. /etc/os-release
+if [[ $VERSION_ID < "22.10" ]]; then
+  apt install libevent-2.1-7
+elif [[ $VERSION_ID == "22.10" ]]; then
+  apt install libevent-2.1-7a
+else
+  echo "unsupported os $VERSION_ID"
+  exit 1
+fi
+
 install_ena() {
   echo "************* Install ENA ****************"
 
-  local ENA_VER=2.7.0
+  local ENA_VER=2.8.0
   local ENA_SRC="/usr/src/amzn-drivers-${ENA_VER}"
 
   cd /tmp
@@ -75,7 +85,8 @@ if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
   zstd -d --rm /usr/local/bin/*.zst || true
   chmod a+x /usr/local/bin/*
   s5cmd version
-  install_ena 
+
+  install_ena
   
   mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
   mv $TF/aws_init.sh /var/lib/cloud/scripts/per-instance/
@@ -83,7 +94,7 @@ elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
   ARTPATH=$(gcloud secrets  versions access latest --secret=artifactdir)
   gsutil cp gs://$ARTPATH/bin/$ARCH/* /usr/local/bin/
   chmod a+x /usr/local/bin/*
-else 
+else
   echo "Unsupported build type ${PACKER_BUILDER_TYPE}"
   exit 1
 fi
@@ -125,12 +136,6 @@ mv $TF/.bash_profile .
 mv $TF/htoprc .config/htop/
 
 mv $TF/bin/* bin/
-
-# . /etc/os-release
-# if [[ $VERSION_ID == "2" ]]; then  # AL2 Linux
-#   install_cmake 3.18.2
-#   echo "alias ninja=ninja-build" >> .bash_aliases
-# fi
 
 # Finally, fix permissions.
 chown -R dev:dev /home/dev
