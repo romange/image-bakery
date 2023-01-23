@@ -109,7 +109,7 @@ mv $TF/node_exporter.service /etc/systemd/system/
 mv $TF/prometheus.service /etc/systemd/system/
 mv $TF/local.conf /etc/sysctl.d/
 mv $TF/prometheus.yml /etc/prometheus/
-mv $TF/grafana_sources.yaml /etc/grafana/provisioning/datasources/
+# mv $TF/grafana_sources.yaml /etc/grafana/provisioning/datasources/
 systemctl enable huge_multiuser.service
 
 echo "* soft nofile 65535" >> /etc/security/limits.conf
