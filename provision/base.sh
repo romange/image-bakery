@@ -76,7 +76,7 @@ install_zellij() {
 echo "********* Install Basics Server Environment ********"
 
 if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
-  pip3 install -U git-remote-codecommit awscli
+  pip install -U git-remote-codecommit awscli
 
   ARTPATH=$(aws ssm get-parameters --names artifactdir  --query "Parameters[*].{Value:Value}" --output text)
 
