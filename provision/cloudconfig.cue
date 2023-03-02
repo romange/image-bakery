@@ -30,6 +30,7 @@ users: [
         ssh_authorized_keys: [
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCano8DfBycFQ/2OxszQ5ZcnHpodZBI4XGsiTK+bw/RxGgwdL6V3/de53DtjZNCltCgfU04fw8wntm2SJ/PyguN8O/Kj3qSD9QHI04CBe2P/Z+GOfJUo528ocIj2PnWHTV8zs5XZVyRaZCLyNfiKTnkfY7EoTHDVJcuUE669v9Q5FDPVBp0eUMGW49Gw1i1z6dXJiv7pfEGyKCcMuGiPnCB357XsuxKzEThazlpuRFWXPqilBOI8hSapMd8G0TXU9xhGNNzpBdrZg6DFvoXX2JChD9sOBNumS0FMv0BEBbZeonMzMHoVU6mMfFMnYAEMJesCXK12vcr440HM8sXC20H roman",
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIArcl9h9QrhN/lZo71+8CuvhxKLEdMgfUGtz1FG0MX2O ari",
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7pztCo7uc3Jd82966hlDMvGibNQzIdIDNVmNhi0GJ3 adi",
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIR5PsRAetrkpRSA7BnZI1SWnjwQItgaGMuqIVANIbXllz50yI37NBEAibfUV3x/rh2D+qxbmbzJVTVLJ7VIX8oVvjrStuPNnScw2jdCKQwJDAzCiYi8eKOIHH9LbS5RDbpYPuUSGzV1NXgEJ2k246gMvUdeHQ6TWRm/4FIX17XOaX/oiEfRvOCST7/vslMNTFKOQ8K6ZZ28JxDgYaDTjr+3D3hwFI/zJCXasoigqyWtRLDHgn3rWgOFeTITYjiuXPhirhSbH/fJWhKG211hSh0fU/YFBrsoeq5jg46KgFzqJl+jMXiPFDyhUefoixdFZz04c92gIlck5p/tZlc3zt oded",
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDhlQvbo9A743IuosAbB6DCQHtG21ySj3L9JBpnpfWgSYfD/PK4qfVma9uQzySIL3wfIy5sVBo6Z+tNUHI+6K8KIBBJCHLcgO0UICQ1Y0qhtmWYNDJ0Qo3YVHU1EdODuHzn/tmkJciitEFBDTchjMv4nF3sy/zUn7rd2GY9zsJ2d+Vsjd1RuXzcjnxiot+PfT+jf2Vpv2osLfntzhRbBCbdqndyCTGcu2I9hd0Cx4At2H/JvtfqtXqTUMKiXIl1gJJxk6u2nCHxM4VTi8YLKu5o3Xxg9P+V22Z4s7P5n2mkRB0hv08+nIVA/dw/00vx6CujbqWT1Y+YfpMsr8SNuXwmgKAllyrsAviqHJL6mmnKa5Ya07ks13S33GRFGXULIkqilLuXV9fhopAVC1aIEd/VKdhaxw5FPoSwknk4UjrZRY9fEVdve7hSMuY4r8fwn90ixBYAzaihQki5OVjj2vYIyYOVe2EhkM2IXywKKZom6up5PUq2rWVomdeqe8jzmm0= vlad",
         ]
@@ -55,11 +56,13 @@ _common_pkgs: ["acl", "automake", "autoconf", "binutils", "bison",
     "tcptrace",
     "python3-pip", "python3-setuptools", "vim", "unzip", "wget", "zip", "zstd", ]
 
-_ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "grafana", "g++",
+_ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "g++",
     "libunwind-dev", "linux-tools-generic", "libbz2-dev",
     "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev",
     "libssl-dev", "libxml2-dev", "libzstd-dev", "net-tools", "numactl", "pixz", "redis-tools",
-    "vim-gui-common", "libevent-2.1-7", "python-is-python3"]
+
+    // 22.10 has libevent-2.1-7a while previous have libevent-2.1-7
+    "vim-gui-common", "libevent-2.1-7*", "python-is-python3"]
 
 runcmd: [
     // Remove systems that add overhead to syscalls.

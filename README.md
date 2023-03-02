@@ -4,6 +4,10 @@ Cloud image bakery
 Packer build requires the appropriate policies/service-accounts to be setup in each of the clouds.
 
 `tf/` folder has requires scripts in order to setup those policies.
+
+To import existing resources you can use:
+`terraform import --var bucket=.... aws_iam_instance_profile.packer_profile PackerBuilderRole`
+
 ## Provision for clouds
 
 GCP setup:
@@ -16,6 +20,8 @@ terraform apply --var "bucket=..." --var "project=..." --var "region=..."
 
 
 AWS setup:
+
+Update the state (gcs) bucket inside main.tf and then:
 
 ```bash
 

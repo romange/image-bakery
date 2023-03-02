@@ -1,13 +1,18 @@
-// terrraform apply
-//
+
 terraform {
 	required_providers {
         aws = {
             source =  "hashicorp/aws"
-            version = "~> 3.60"
+            version = "~> 3.76"
         }
     }
-	required_version = ">= 0.14.9"
+
+    required_version = ">= 1.0"
+
+    backend "gcs" {
+        bucket  = ""
+        prefix  = "terraform/state"
+    }
 }
 
 // to set bucket into a ssm parameter secret.
@@ -37,12 +42,12 @@ data  "aws_iam_policy_document" "packer_policy" {
 data "aws_iam_policy_document" 	"instance-assume-role-policy" {
 	statement {
         actions = ["sts:AssumeRole"]
-        
+
         principals {
             type = "Service"
             identifiers = ["ec2.amazonaws.com"]
         }
-    }   
+    }
 }
 
 resource "aws_ssm_parameter" "packer_artifact_bucket" {

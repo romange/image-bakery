@@ -26,7 +26,7 @@ fi
 install_ena() {
   echo "************* Install ENA ****************"
 
-  local ENA_VER=2.8.0
+  local ENA_VER=2.8.3
   local ENA_SRC="/usr/src/amzn-drivers-${ENA_VER}"
 
   cd /tmp

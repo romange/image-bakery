@@ -54,7 +54,7 @@ source "amazon-ebs" "dev" {
     volume_type           = "gp2"
   }
 
-  ami_name = "udev-${local.osver}-${var.arch}-${local.timestamp}"
+  ami_name = local.ami_name
 
   ami_virtualization_type = "hvm"
   ena_support             = true
@@ -68,6 +68,10 @@ source "amazon-ebs" "dev" {
   ssh_username            = "ubuntu"
   user_data_file          = var.userdata_file
   # spot does not work here because spo can not set ena_support attribute.
+
+  run_tags = {
+    Name  = "Packer Builder ${local.ami_name}"
+  }
 
   tags = {
     OS_Version    = "Ubuntu"
