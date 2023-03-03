@@ -13,12 +13,6 @@ bootcmd: [
     "echo PubkeyAcceptedKeyTypes=+ssh-rsa > /etc/ssh/sshd_config.d/packer.conf"
 ]
 
-apt: sources: grafana: {
-    source: "deb https://packages.grafana.com/oss/deb stable main"
-
-    // Extracted with wget -q -O - https://packages.grafana.com/gpg.key  | gpg --list-packets -
-    keyid: "9E439B102CF3C0C6"
-}
 
 users: [
     "default",
@@ -49,20 +43,18 @@ users: [
 
 // podman exists starting from 21.10 and later.
 _common_pkgs: ["acl", "automake", "autoconf", "binutils", "bison",
-    "bzip2", "ca-certificates", "ccache", "cmake-curses-gui", "chrony", "cloc", "curl",
+    "bzip2", "ca-certificates", "ccache", "cmake", "cmake-curses-gui", "chrony", "cloc", "curl",
     "dkms", "doxygen", "htop", "iftop", "iperf3",
-    "iotop", "flex", "gdb", "graphviz", "git", "golang", "libelf-dev",
-    "libtool", "make", "mlocate", "ninja-build", "npm", "parallel", "runc", "sysstat",
+    "iotop", "flex", "g++", "gdb", "graphviz", "git", "golang", "libelf-dev", "libssl-dev", "libxml2-dev", "libzstd-dev", "libboost-fiber-dev", "libunwind-dev",
+    "libtool", "make", "mlocate", "ninja-build", "npm", "parallel", "redis-tools", "runc", "sysstat",
     "tcptrace",
     "python3-pip", "python3-setuptools", "vim", "unzip", "wget", "zip", "zstd", ]
 
-_ubuntu_pkgs: [ "ack-grep", "apt-transport-https", "cmake", "g++",
-    "libunwind-dev", "linux-tools-generic", "libbz2-dev",
-    "docker.io", "libboost-fiber-dev", "libhugetlbfs-bin", "libncurses5-dev",
-    "libssl-dev", "libxml2-dev", "libzstd-dev", "net-tools", "numactl", "pixz", "redis-tools",
-
-    // 22.10 has libevent-2.1-7a while previous have libevent-2.1-7
-    "vim-gui-common", "libevent-2.1-7*", "python-is-python3"]
+_ubuntu_pkgs: [ "ack-grep", "apt-transport-https",
+     "linux-tools-generic", "libbz2-dev",
+    "docker.io",  "libhugetlbfs-bin", "libncurses5-dev",
+     "net-tools", "numactl", "pixz",
+    "vim-gui-common", "python-is-python3"]
 
 runcmd: [
     // Remove systems that add overhead to syscalls.
@@ -115,13 +107,17 @@ runcmd: [
 
 // _os_version is limited to either al2 or ubuntu.
 // the value is injected via '-t osf=...' argument
-_os_flavour: "al2" | "ubuntu" @tag(osf)
+_os_flavour: "al2" | "ubuntu" | "debian" @tag(osf)
 
 _cloud: "aws" | "gcp" | "azure" @tag(cloud)
 _cloud_pkgs: [...]
 
 if _os_flavour == "ubuntu" {
     packages: _common_pkgs + _ubuntu_pkgs + _cloud_pkgs
+}
+
+if _os_flavour == "debian" {
+  packages: _common_pkgs + _cloud_pkgs
 }
 
 _azure_key: """

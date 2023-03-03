@@ -17,6 +17,7 @@ fi
 build_only=''
 region='us-east1'  # gcp default
 additional_vars=''
+os_flavor='ubuntu'
 
 for ((i=1;i <= $#;));do
   arg=${!i}
@@ -33,6 +34,12 @@ for ((i=1;i <= $#;));do
     additional_vars+='--var az_resource_group="" '
     shift
   ;;
+  --debian)
+    additional_vars+='--var use_debian=true '
+    os_flavor='debian'
+    shift
+  ;;
+
   --aws)
     build_only="amazon-ebs.dev"
     cloud_type='aws'
@@ -62,7 +69,7 @@ fi
 userdatafile=$(mktemp -u -t userdata.yml.XXXX)
 echo "Exporting userdata to ${userdatafile}"
 echo '#cloud-config' > $userdatafile
-cuecmd=(cue export provision/cloudconfig.cue -t osf=ubuntu -t cloud=${cloud_type} \
+cuecmd=(cue export provision/cloudconfig.cue -t osf=${os_flavor} -t cloud=${cloud_type} \
     --out yaml)
 echo "${cuecmd[@]}"
 "${cuecmd[@]}" >> $userdatafile

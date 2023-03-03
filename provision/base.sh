@@ -7,17 +7,24 @@ env
 PATH=$PATH:/usr/local/bin
 TF=/tmp/files
 
-if [[ $(uname -i) == "aarch64" ]]; then
+if [[ $(uname -m) == "aarch64" ]]; then
   ARCH='aarch64'
 else
   ARCH='x86'
 fi
 
 . /etc/os-release
+if [[ $NAME == "Ubuntu" ]]; then
+ apt install -y linux-tools-`uname -r`
+elif [[ $VERSION_CODENAME == "bookworm" ]]; then
+ apt install -y 'linux-headers-cloud*'
+fi
 if [[ $VERSION_ID < "22.10" ]]; then
   apt install libevent-2.1-7
 elif [[ $VERSION_ID == "22.10" ]]; then
   apt install libevent-2.1-7a
+elif [[ $VERSION_CODENAME == "bookworm" ]]; then
+  echo "found Debian"
 else
   echo "unsupported os $VERSION_ID"
   exit 1
@@ -76,7 +83,12 @@ install_zellij() {
 echo "********* Install Basics Server Environment ********"
 
 if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
-  pip install -U git-remote-codecommit awscli
+  pip_ver=$(pip3 --version | cut -f2 -d' ')
+  if [[ ! $pip_ver < "23" ]]; then
+    # pip 23 decided it does not insall system packages anymore. This overrides this behavior.
+    PIP_OPT=--break-system-packages
+  fi
+  pip3 install $PIP_OPT -U git-remote-codecommit awscli
 
   ARTPATH=$(aws ssm get-parameters --names artifactdir  --query "Parameters[*].{Value:Value}" --output text)
 
@@ -86,8 +98,9 @@ if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
   chmod a+x /usr/local/bin/*
   s5cmd version
 
-  install_ena
-  
+  if [[ $NAME == "Ubuntu" ]]; then
+    install_ena
+  fi
   mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
   mv $TF/aws_init.sh /var/lib/cloud/scripts/per-instance/
 elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
@@ -99,7 +112,6 @@ else
   exit 1
 fi
 
-apt install -y linux-tools-`uname -r`
 
 
 # Dispatch files that were put by packer.yaml into /tmp/files

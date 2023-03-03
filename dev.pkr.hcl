@@ -17,6 +17,10 @@ variable "userdata_file" { type = string }
 variable "az_resource_group" { type = string }
 variable "arch" { default = "amd64" }
 variable "os_ver" { default = "21.10" }
+variable "use_debian" {
+  type    = bool
+  default = false
+}
 
 locals {
   gservice_account_id = "packer@${var.project}.iam.gserviceaccount.com"
@@ -28,7 +32,9 @@ locals {
     EOT
   timestamp           = regex_replace(timestamp(), "[- TZ:]", "")
   osver               = replace(var.os_ver, ".", "")
-  ami_name = "udev-${local.osver}-${var.arch}-${local.timestamp}"
+  ami_name            = "udev-${local.osver}-${var.arch}-${local.timestamp}"
+  ami_owner           = var.use_debian ? "903794441882" : "099720109477"
+  ami_templ           = var.use_debian ? "debian-12-${var.arch}-daily*" : "ubuntu/images/hvm-ssd/ubuntu-*-${var.os_ver}-${var.arch}-server-*"
   #userdata            = templatefile("${path.root}/provision/userdata.pkrtpl.yml", { os = "ubuntu" })
 }
 
@@ -37,12 +43,10 @@ source "amazon-ebs" "dev" {
     filters = {
       virtualization-type = "hvm"
 
-      # I did not succeed to use daily images because packer fails to connect to them
-      # using its ec2 keypair.
-      name                = "ubuntu/images/hvm-ssd/ubuntu-*-${var.os_ver}-${var.arch}-server-*"
-      root-device-type    = "ebs"
+      name             = local.ami_templ
+      root-device-type = "ebs"
     }
-    owners      = ["099720109477"]
+    owners      = [local.ami_owner]
     most_recent = true
   }
 
@@ -62,10 +66,10 @@ source "amazon-ebs" "dev" {
   force_deregister        = true
   force_delete_snapshot   = true
   iam_instance_profile    = "PackerBuilderRole"
-  instance_type           = var.arch == "amd64" ? "m5.xlarge" : "m6g.large"
+  instance_type           = var.arch == "amd64" ? "m5.xlarge" : "m6g.xlarge"
   ami_description         = "udev-${local.osver}-${local.timestamp}"
   region                  = var.region
-  ssh_username            = "ubuntu"
+  ssh_username            = var.use_debian ? "admin" : "ubuntu"
   user_data_file          = var.userdata_file
   # spot does not work here because spo can not set ena_support attribute.
 
@@ -74,10 +78,10 @@ source "amazon-ebs" "dev" {
   }
 
   tags = {
-    OS_Version    = "Ubuntu"
+    OS_Version    = var.use_debian ? "Debian" : "Ubuntu"
     Release       = "Latest"
     Base_AMI_Name = "{{ .SourceAMIName }}"
-    Name          = "Ubuntu Development ${var.os_ver}"
+    Name          = format("%s Development %s", var.use_debian ? "Debian" : "Ubuntu", var.os_ver)
   }
 }
 
