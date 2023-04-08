@@ -19,21 +19,22 @@ if [[ $NAME == "Ubuntu" ]]; then
 elif [[ $VERSION_CODENAME == "bookworm" ]]; then
  apt install -y 'linux-headers-cloud*'
 fi
-if [[ $VERSION_ID < "22.10" ]]; then
+if [[ $VERSION_ID < "22.10" || $VERSION_ID == 23.04 ]]; then
   apt install libevent-2.1-7
 elif [[ $VERSION_ID == "22.10" ]]; then
   apt install libevent-2.1-7a
 elif [[ $VERSION_CODENAME == "bookworm" ]]; then
   echo "found Debian"
 else
-  echo "unsupported os $VERSION_ID"
+  RED='\033[0;31m'
+  echo -e "${RED}********************************  unsupported os $VERSION_ID  ****************************"
   exit 1
 fi
 
 install_ena() {
   echo "************* Install ENA ****************"
 
-  local ENA_VER=2.8.3
+  local ENA_VER=2.8.4
   local ENA_SRC="/usr/src/amzn-drivers-${ENA_VER}"
 
   cd /tmp
@@ -73,7 +74,7 @@ install_mold() {
 install_zellij() {
   ARCH=`uname -m`
   BASE_URL=https://github.com/zellij-org/zellij/releases/download
-  VER=0.31.3
+  VER=0.35.2
   curl -L -s $BASE_URL/v${VER}/zellij-$ARCH-unknown-linux-musl.tar.gz -o zellij.tgz
   tar xvfz zellij.tgz && rm zellij.tgz
   mv zellij /usr/local/bin/
@@ -101,7 +102,8 @@ if [[ $PACKER_BUILDER_TYPE == "amazon-ebs" ]]; then
   if [[ $NAME == "Ubuntu" ]]; then
     install_ena
   fi
-  mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
+  # mv $TF/changedns.sh /var/lib/cloud/scripts/per-boot/
+  mv $TF/aws_tune.sh /var/lib/cloud/scripts/per-boot/
   mv $TF/aws_init.sh /var/lib/cloud/scripts/per-instance/
 elif [[ $PACKER_BUILDER_TYPE == "googlecompute" ]]; then
   ARTPATH=$(gcloud secrets  versions access latest --secret=artifactdir)
@@ -128,7 +130,7 @@ echo "* soft nofile 65535" >> /etc/security/limits.conf
 echo "* soft core unlimited" >> /etc/security/limits.conf
 
 # Disable mitigations
-sed -i 's/\(^GRUB_CMDLINE_LINUX=".*\)"/\1 mitigations=off"/' /etc/default/grub
+sed -i 's/\(^GRUB_CMDLINE_LINUX=".*\)"/\1 mitigations=off intel_idle.max_cstate=1 processor.max_cstate=1"/' /etc/default/grub
 update-grub
 
 wget -nv -P /etc/bash_completion.d/ https://raw.githubusercontent.com/imomaliev/tmux-bash-completion/master/completions/tmux
