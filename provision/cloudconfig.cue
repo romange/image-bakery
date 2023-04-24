@@ -22,6 +22,7 @@ users: [
         groups: "adm, docker"
         shell:  "/bin/bash"
         ssh_authorized_keys: [
+            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIBkSpQx1I1Nq+44TvlSoGi/kDfD+urUvTAys5uCjzSP roy@bisli",
             "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCano8DfBycFQ/2OxszQ5ZcnHpodZBI4XGsiTK+bw/RxGgwdL6V3/de53DtjZNCltCgfU04fw8wntm2SJ/PyguN8O/Kj3qSD9QHI04CBe2P/Z+GOfJUo528ocIj2PnWHTV8zs5XZVyRaZCLyNfiKTnkfY7EoTHDVJcuUE669v9Q5FDPVBp0eUMGW49Gw1i1z6dXJiv7pfEGyKCcMuGiPnCB357XsuxKzEThazlpuRFWXPqilBOI8hSapMd8G0TXU9xhGNNzpBdrZg6DFvoXX2JChD9sOBNumS0FMv0BEBbZeonMzMHoVU6mMfFMnYAEMJesCXK12vcr440HM8sXC20H roman",
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIArcl9h9QrhN/lZo71+8CuvhxKLEdMgfUGtz1FG0MX2O ari",
             "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7pztCo7uc3Jd82966hlDMvGibNQzIdIDNVmNhi0GJ3 adi",
