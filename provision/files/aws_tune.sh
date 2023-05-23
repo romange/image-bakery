@@ -11,8 +11,19 @@ IFACE=$(ip -o link | grep $MAC | awk -F: '{print $2}' | tr -d ' ')
 
 ethtool -C $IFACE adaptive-rx on
 
+# works better for m5.large-2xlarge
 if (( $CPU_NUM <= 8 )); then
-  ethtool -L $IFACE combined $(( $CPU_NUM / 2 ))
+  ethtool -L $IFACE combined $(( CPU_NUM / 2 ))
+fi
+
+IRQS=(`cat  /proc/interrupts | grep $IFACE | cut -d":" -f1`)
+NUM_IRQS=${#IRQS[@]}
+CPU_DELTA=1
+CPU_START=0
+
+if (( CPU_NUM / 2  >= NUM_IRQS)); then
+    CPU_DELTA=1
+    CPU_START=0
 fi
 
 setup_queues()
@@ -20,29 +31,32 @@ setup_queues()
     local IFACE=$1
     local que_prefix="/sys/class/net/$IFACE/queues"
     local q_count=$(ls -1 $que_prefix/*/xps_cpus | wc -l)
-    local cpuid=1
+    local cpuid=$CPU_START
+
     for (( i=0; i<$q_count; i++ ))
     do
         local MASKN=$((1<<$cpuid))
-		MASK=$(printf "%X" $MASKN)
+		local MASK=$(printf "%X" $MASKN)
         echo "Setting RPS/XPS for $IFACE queue $i to CPU $cpuid (mask $MASK)"
         echo $MASK > $que_prefix/tx-$i/xps_cpus
         echo $MASK > $que_prefix/rx-$i/rps_cpus
-        cpuid=$((cpuid+2))
+        cpuid=$((cpuid + $CPU_DELTA))
     done
 }
 
 set_irqs()
 {
     local IFACE=$1
-    local irqs=(`cat  /proc/interrupts | grep $IFACE | cut -d":" -f1`)
-    local cpuid=1
+
+    local cpuid=$CPU_START
     local irqargs=""
 
-    for irq in ${irqs[*]}
+    echo "Number of irqs: $NUM_IRQS, number of CPUs: $CPU_NUM"
+
+    for irq in ${IRQS[*]}
     do
         echo $cpuid > /proc/irq/$irq/smp_affinity_list
-        cpuid=$((cpuid+2))
+        cpuid=$((cpuid+$CPU_DELTA))
         irqargs="$irqargs --banirq=$irq "
     done
     # we do not append because subsequent restarts will just add more lines.
